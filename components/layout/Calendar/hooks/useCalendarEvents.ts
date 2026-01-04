@@ -95,7 +95,6 @@ export function useCalendarEvents(
         .catch((error: { message?: string }) => {
           if (!isMountedRef.current) return;
           
-          console.error("Error loading calendar events:", error);
           const errorMessage =
             error.message ||
             "Failed to load calendar events. Please check your connection.";

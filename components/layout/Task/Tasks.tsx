@@ -1,5 +1,5 @@
 "use client";
-import React, { useCallback, useMemo } from "react";
+import React, { useCallback, useMemo, memo } from "react";
 import { Task } from "./Task";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -14,21 +14,21 @@ interface TasksProps {
   items: Array<Doc<"tasks">>;
   sortBy?: SortBy;
   sortOrder?: SortOrder;
+  keyPrefix?: string;
 }
 
-export const Tasks = React.memo(
+export const Tasks = memo(
   function Tasks({
     items,
     sortBy = "date",
     sortOrder = "asc",
+    keyPrefix = "",
   }: TasksProps) {
     const { toast } = useToast();
     const { projects } = useTaskStore();
 
     const checkTask = useMutation(api.tasks.checkTask);
     const uncheckTask = useMutation(api.tasks.uncheckTask);
-
-    console.count("Tasks");
 
     const handleOnChangeTodo = useCallback(
       async (task: Doc<"tasks">) => {
@@ -46,56 +46,61 @@ export const Tasks = React.memo(
       [checkTask, uncheckTask, toast]
     );
 
-  const sortedItems = useMemo(() => {
-    const sorted = [...items];
-    
-    sorted.sort((a, b) => {
-      let comparison = 0;
-      
-      switch (sortBy) {
-        case "date":
-          const dateA = a.dueDate || 0;
-          const dateB = b.dueDate || 0;
-          comparison = dateA - dateB;
-          break;
-        case "priority":
-          const priorityA = a.priority || 0;
-          const priorityB = b.priority || 0;
-          comparison = priorityA - priorityB;
-          break;
-        case "name":
-          const nameA = (a.taskName || "").toLowerCase();
-          const nameB = (b.taskName || "").toLowerCase();
-          comparison = nameA.localeCompare(nameB);
-          break;
-        case "project":
-          const projectA = projects.find((p) => p._id === a.projectId)?.name || "";
-          const projectB = projects.find((p) => p._id === b.projectId)?.name || "";
-          comparison = projectA.localeCompare(projectB);
-          break;
-      }
-      
-      return sortOrder === "asc" ? comparison : -comparison;
-    });
-    
-    return sorted;
-  }, [items, sortBy, sortOrder, projects]);
+    const sortedItems = useMemo(() => {
+      const sorted = [...items];
 
-  const taskElements = useMemo(() => {
-    return sortedItems.map((task: Doc<"tasks">) => (
-      <Task
-        key={task._id}
-        data={task}
-        isCompleted={task.isCompleted}
-        handleOnChange={() => handleOnChangeTodo(task)}
-      />
-    ));
-  }, [sortedItems, handleOnChangeTodo]);
+      sorted.sort((a, b) => {
+        let comparison = 0;
+
+        switch (sortBy) {
+          case "date":
+            const dateA = a.dueDate || 0;
+            const dateB = b.dueDate || 0;
+            comparison = dateA - dateB;
+            break;
+          case "priority":
+            const priorityA = a.priority || 0;
+            const priorityB = b.priority || 0;
+            comparison = priorityA - priorityB;
+            break;
+          case "name":
+            const nameA = (a.taskName || "").toLowerCase();
+            const nameB = (b.taskName || "").toLowerCase();
+            comparison = nameA.localeCompare(nameB);
+            break;
+          case "project":
+            const projectA =
+              projects.find((p) => p._id === a.projectId)?.name || "";
+            const projectB =
+              projects.find((p) => p._id === b.projectId)?.name || "";
+            comparison = projectA.localeCompare(projectB);
+            break;
+        }
+
+        return sortOrder === "asc" ? comparison : -comparison;
+      });
+
+      return sorted;
+    }, [items, sortBy, sortOrder, projects]);
+
+    const taskElements = useMemo(() => {
+      const uniqueTasks = Array.from(
+        new Map(sortedItems.map((task) => [task._id, task])).values()
+      );
+
+      return uniqueTasks.map((task: Doc<"tasks">) => (
+        <Task
+          key={keyPrefix ? `${keyPrefix}-${task._id}` : task._id}
+          data={task}
+          isCompleted={task.isCompleted}
+          handleOnChange={() => handleOnChangeTodo(task)}
+        />
+      ));
+    }, [sortedItems, handleOnChangeTodo, keyPrefix]);
 
     return <>{taskElements}</>;
   },
-  (prevProps, nextProps) => {
-    // Custom comparison - porównaj items, sortBy i sortOrder
+  (prevProps: TasksProps, nextProps: TasksProps) => {
     if (
       prevProps.items.length !== nextProps.items.length ||
       prevProps.sortBy !== nextProps.sortBy ||

@@ -140,7 +140,7 @@ export default function Home() {
       {/* Footer */}
       <footer className="border-t py-8">
         <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-          <p>© 2024 Doerit. Built with Next.js and Convex.</p>
+          <p>© 2024 todoit. Built with Next.js and Convex.</p>
         </div>
       </footer>
     </div>

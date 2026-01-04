@@ -1,6 +1,6 @@
-# Doerit - Task Management Application
+# todoit - Task Management Application
 
-Doerit is a modern task management application built with Next.js, Convex, and TypeScript. Organize your life, one task at a time.
+todoit is a modern task management application built with Next.js, Convex, and TypeScript. Organize your life, one task at a time.
 
 ## 🚀 Getting Started
 

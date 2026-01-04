@@ -34,6 +34,7 @@ import {
   SelectValue,
 } from "@/components/ui/Select";
 import { useToast } from "@/hooks/useToast";
+import { useKeyboardShortcuts } from "@/hooks";
 import { cn } from "@/lib/utils";
 import { Doc, Id } from "@/convex/_generated/dataModel";
 import { useAction } from "convex/react";
@@ -50,27 +51,26 @@ const FormSchema = z.object({
   dueDate: z.date({ message: "A due date is required" }),
   priority: z.string().min(1, { message: "Please select a priority" }),
   projectId: z.string().min(1, { message: "Please select a Project" }),
-  labelId: z.string().min(1, { message: "Please select a Label" }),
 });
 
 interface AddTaskInlineProps {
   setShowAddTask: Dispatch<SetStateAction<boolean>>;
   parentTask?: Doc<"tasks">;
   projectId?: Id<"projects">;
+  enableKeyboardShortcuts?: boolean;
 }
 
 export const AddTaskInline: FC<AddTaskInlineProps> = ({
   setShowAddTask,
   parentTask,
   projectId: myProjectId,
+  enableKeyboardShortcuts = false,
 }) => {
   const projectId =
     myProjectId ||
     parentTask?.projectId ||
     (GET_STARTED_PROJECT_ID as Id<"projects">);
 
-  const labelId =
-    parentTask?.labelId || ("k579xwsz7e2y73rxexkrg2f5j96tzt4f" as Id<"labels">);
   const priority = parentTask?.priority?.toString() || "1";
   const parentId = parentTask?._id;
 
@@ -83,8 +83,6 @@ export const AddTaskInline: FC<AddTaskInlineProps> = ({
     (project, index, self) =>
       index === self.findIndex((p) => p._id === project._id)
   );
-  // TODO: Add labels API query when available
-  const labels: Doc<"labels">[] = [];
 
   const createSubTaskEmbeddings = useAction(
     api.subTasks.createSubTaskAndEmbeddings
@@ -98,7 +96,6 @@ export const AddTaskInline: FC<AddTaskInlineProps> = ({
     priority,
     dueDate: new Date(),
     projectId: projectId.toString(),
-    labelId: labelId.toString(),
   };
 
   const form = useForm<z.infer<typeof FormSchema>>({
@@ -106,9 +103,22 @@ export const AddTaskInline: FC<AddTaskInlineProps> = ({
     defaultValues,
   });
 
+  // Handle form submission for keyboard shortcuts
+  const handleSubmit = () => {
+    form.handleSubmit(onSubmit)();
+  };
+
+  // Keyboard shortcuts
+  useKeyboardShortcuts({
+    isEnabled: enableKeyboardShortcuts,
+    isSaving: isLoading,
+    isDeleting: false, // No delete action when creating
+    onSave: handleSubmit,
+    onDelete: () => {}, // No delete action when creating
+  });
+
   async function onSubmit(data: z.infer<typeof FormSchema>) {
-    const { taskName, description, priority, dueDate, projectId, labelId } =
-      data;
+    const { taskName, description, priority, dueDate, projectId } = data;
 
     if (projectId) {
       setIsLoading(true);
@@ -122,7 +132,7 @@ export const AddTaskInline: FC<AddTaskInlineProps> = ({
             priority: parseInt(priority),
             dueDate: moment(dueDate).valueOf(),
             projectId: projectId as Id<"projects">,
-            labelId: labelId as Id<"labels">,
+            labelId: "k579xwsz7e2y73rxexkrg2f5j96tzt4f" as Id<"labels">,
           });
 
           toast({
@@ -139,7 +149,7 @@ export const AddTaskInline: FC<AddTaskInlineProps> = ({
             priority: parseInt(priority),
             dueDate: moment(dueDate).valueOf(),
             projectId: projectId as Id<"projects">,
-            labelId: labelId as Id<"labels">,
+            labelId: "k579xwsz7e2y73rxexkrg2f5j96tzt4f" as Id<"labels">,
           });
 
           toast({
@@ -149,8 +159,7 @@ export const AddTaskInline: FC<AddTaskInlineProps> = ({
           form.reset({ ...defaultValues });
           setShowAddTask(false);
         }
-      } catch (error) {
-        console.error("Error creating task:", error);
+      } catch {
         toast({
           title: "❌ Error creating task",
           description: "Please try again",
@@ -194,7 +203,7 @@ export const AddTaskInline: FC<AddTaskInlineProps> = ({
               <FormItem>
                 <FormControl>
                   <RichTextEditor
-                    content={field.value || ""}
+                    value={field.value || ""}
                     onChange={field.onChange}
                     placeholder="Add description, lists, images..."
                     className="w-full"
@@ -259,32 +268,6 @@ export const AddTaskInline: FC<AddTaskInlineProps> = ({
                       {[1, 2, 3, 4].map((item) => (
                         <SelectItem key={item} value={item.toString()}>
                           Priority {item}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="labelId"
-              render={({ field }) => (
-                <FormItem>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={labelId || field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a Label" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {labels.map((label) => (
-                        <SelectItem key={label._id} value={label._id}>
-                          {label?.name}
                         </SelectItem>
                       ))}
                     </SelectContent>

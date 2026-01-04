@@ -103,8 +103,7 @@ function AddProjectDialogContent() {
         });
         router.push(`/loggedin/projects/${projectId}`);
       }
-    } catch (error) {
-      console.error("Error creating project:", error);
+    } catch {
       toast({
         title: "❌ Error creating project",
         description: "Please try again",

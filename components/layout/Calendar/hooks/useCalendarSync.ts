@@ -26,8 +26,7 @@ export function useCalendarSync() {
           duration: 2000,
         });
       }
-    } catch (error) {
-      console.error("Error syncing with calendar:", error);
+    } catch {
       toast({
         title: "❌ Error",
         description:
@@ -46,7 +45,6 @@ export function useCalendarSync() {
         duration: 2000,
       });
     } catch (error) {
-      console.error("Error unsyncing from calendar:", error);
       toast({
         title: "❌ Error",
         description: "Failed to remove from Google Calendar",

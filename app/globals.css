@@ -96,6 +96,12 @@ body {
   margin: 0.25rem 0;
 }
 
+/* Override for task items - don't apply default list styles */
+.ProseMirror li[data-type="taskItem"],
+.ProseMirror li.task-item {
+  list-style: none !important;
+}
+
 .ProseMirror a {
   color: hsl(var(--primary));
   text-decoration: underline;
@@ -104,6 +110,222 @@ body {
 
 .ProseMirror a:hover {
   opacity: 0.8;
+}
+
+/* Task List Styles - Tiptap structure */
+.ProseMirror ul[data-type="taskList"],
+.ProseMirror ul.task-list {
+  list-style: none;
+  padding-left: 0;
+  margin: 0.5rem 0;
+}
+
+.ProseMirror li[data-type="taskItem"],
+.ProseMirror li.task-item {
+  display: inline-flex !important;
+  width: 100%;
+  align-items: flex-start;
+  list-style: none;
+}
+
+.ProseMirror li[data-type="taskItem"] label,
+.ProseMirror li.task-item label {
+  display: block;
+  align-items: flex-start;
+  gap: 0 !important;
+  max-width: 30px !important;
+  cursor: pointer;
+  margin: 0;
+}
+
+/* Checkbox - MAXIMUM SPECIFICITY - override everything */
+.ProseMirror input[type="checkbox"],
+.ProseMirror li input[type="checkbox"],
+.ProseMirror label input[type="checkbox"],
+.ProseMirror li[data-type="taskItem"] input[type="checkbox"],
+.ProseMirror li.task-item input[type="checkbox"],
+.ProseMirror li[data-type="taskItem"] label input[type="checkbox"],
+.ProseMirror li.task-item label input[type="checkbox"],
+div.ProseMirror input[type="checkbox"],
+div.ProseMirror li input[type="checkbox"],
+div.ProseMirror label input[type="checkbox"] {
+  /* OVERRIDE: Force solid visible background */
+  background-color: #ffffff !important;
+  background: #ffffff !important;
+  /* CRITICAL: Force visibility */
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  /* CRITICAL: Force dimensions */
+  width: 20px !important;
+  height: 20px !important;
+  min-width: 20px !important;
+  min-height: 20px !important;
+  max-width: 20px !important;
+  max-height: 20px !important;
+  /* CRITICAL: Force spacing */
+  margin: 2px 0.5rem 0 0 !important;
+  padding: 0 !important;
+  /* CRITICAL: Force appearance - override user agent */
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  /* CRITICAL: Force layout */
+  flex-shrink: 0 !important;
+  flex-grow: 0 !important;
+  position: relative !important;
+  box-sizing: border-box !important;
+  /* CRITICAL: Force styling - use solid colors */
+  cursor: pointer !important;
+  border-radius: 2px !important;
+  border: 1px solid hsl(var(--primary)) !important;
+  border-width: 2px !important;
+  border-style: solid !important;
+  transition: all 0.2s ease !important;
+  /* Ensure background image can be displayed */
+  background-clip: padding-box !important;
+  background-origin: padding-box !important;
+  /* CRITICAL: Ensure it's not hidden */
+  clip: auto !important;
+  clip-path: none !important;
+  overflow: visible !important;
+  z-index: 9999 !important;
+  /* OVERRIDE: Global input styles */
+  font: inherit !important;
+  color: inherit !important;
+  text-align: start !important;
+  text-indent: 0 !important;
+  text-shadow: none !important;
+  text-transform: none !important;
+  letter-spacing: normal !important;
+  word-spacing: normal !important;
+  line-height: normal !important;
+  /* OVERRIDE: Remove any transforms that might hide it */
+  transform: none !important;
+}
+
+.ProseMirror li[data-type="taskItem"] input[type="checkbox"]:hover,
+.ProseMirror li.task-item input[type="checkbox"]:hover,
+.ProseMirror li[data-type="taskItem"] label input[type="checkbox"]:hover,
+.ProseMirror li.task-item label input[type="checkbox"]:hover {
+  border-color: hsl(var(--primary)) !important;
+  transform: scale(1.1);
+}
+
+.task-item > label {
+  width: 0% !important;
+  flex: auto !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+/* MAXIMUM SPECIFICITY for checked state - must override default white background */
+.ProseMirror li[data-type="taskItem"] input[type="checkbox"]:checked,
+.ProseMirror li.task-item input[type="checkbox"]:checked,
+.ProseMirror li[data-type="taskItem"] label input[type="checkbox"]:checked,
+.ProseMirror li.task-item label input[type="checkbox"]:checked,
+div.ProseMirror input[type="checkbox"]:checked,
+div.ProseMirror li input[type="checkbox"]:checked,
+div.ProseMirror label input[type="checkbox"]:checked,
+.ProseMirror input[type="checkbox"]:checked,
+.ProseMirror li input[type="checkbox"]:checked,
+.ProseMirror label input[type="checkbox"]:checked {
+  /* CRITICAL: Override white background with primary color - use direct value for maximum specificity */
+  background-color: hsl(11 98% 65%) !important;
+  background: hsl(11 98% 65%) !important;
+  /* CRITICAL: Checkmark SVG - white checkmark on orange background */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 18 18' fill='none'%3E%3Cpath d='M15 4.5L7.5 12L4.5 9' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: center center !important;
+  background-size: 18px 18px !important;
+  /* CRITICAL: Force border to match background */
+  border: 2px solid hsl(11 98% 65%) !important;
+  border-color: hsl(11 98% 65%) !important;
+  border-width: 2px !important;
+  border-style: solid !important;
+  /* Ensure visibility with shadow */
+  box-shadow:
+    0 0 0 2px hsl(11 98% 65% / 0.3),
+    0 0 0 3px hsl(11 98% 65% / 0.1) !important;
+  /* Override any other background styles */
+  background-clip: padding-box !important;
+  background-origin: padding-box !important;
+  /* CRITICAL: Ensure these override the default white background */
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* Dark mode support */
+.dark .ProseMirror li[data-type="taskItem"] input[type="checkbox"]:checked,
+.dark .ProseMirror li.task-item input[type="checkbox"]:checked,
+.dark .ProseMirror li[data-type="taskItem"] label input[type="checkbox"]:checked,
+.dark .ProseMirror li.task-item label input[type="checkbox"]:checked,
+.dark div.ProseMirror input[type="checkbox"]:checked,
+.dark div.ProseMirror li input[type="checkbox"]:checked,
+.dark div.ProseMirror label input[type="checkbox"]:checked,
+.dark .ProseMirror input[type="checkbox"]:checked,
+.dark .ProseMirror li input[type="checkbox"]:checked,
+.dark .ProseMirror label input[type="checkbox"]:checked {
+  background-color: hsl(346.8 77.2% 49.8%) !important;
+  background: hsl(346.8 77.2% 49.8%) !important;
+  border: 2px solid hsl(346.8 77.2% 49.8%) !important;
+  border-color: hsl(346.8 77.2% 49.8%) !important;
+}
+
+.ProseMirror li[data-type="taskItem"] input[type="checkbox"]:checked:hover,
+.ProseMirror li.task-item input[type="checkbox"]:checked:hover,
+.ProseMirror
+  li[data-type="taskItem"]
+  label
+  input[type="checkbox"]:checked:hover,
+.ProseMirror li.task-item label input[type="checkbox"]:checked:hover,
+div.ProseMirror input[type="checkbox"]:checked:hover,
+div.ProseMirror li input[type="checkbox"]:checked:hover,
+div.ProseMirror label input[type="checkbox"]:checked:hover {
+  background-color: hsl(var(--primary) / 0.9) !important;
+  background: hsl(var(--primary) / 0.9) !important;
+  border: 1px solid hsl(var(--primary) / 0.9) !important;
+  border-color: hsl(var(--primary) / 0.9) !important;
+  border-width: 1px !important;
+  border-style: solid !important;
+}
+
+/* Text content - stable layout */
+.ProseMirror li[data-type="taskItem"] label > div,
+.ProseMirror li.task-item label > div,
+.ProseMirror li[data-type="taskItem"] > div:not(:has(input)),
+.ProseMirror li.task-item > div:not(:has(input)) {
+  flex: 1;
+  text-align: left;
+  min-width: 0;
+  margin: 0;
+}
+
+.ProseMirror li[data-type="taskItem"] p,
+.ProseMirror li.task-item p {
+  margin: 0;
+  width: 100%;
+  padding: 0;
+}
+
+/* Text strikethrough when checked - multiple selectors for compatibility */
+.ProseMirror li[data-type="taskItem"][data-checked="true"] p,
+.ProseMirror li.task-item[data-checked="true"] p,
+.ProseMirror li[data-type="taskItem"][data-checked="true"] label > div,
+.ProseMirror li.task-item[data-checked="true"] label > div,
+.ProseMirror li[data-type="taskItem"][data-checked="true"] > div:not(input),
+.ProseMirror li.task-item[data-checked="true"] > div:not(input),
+.ProseMirror li[data-type="taskItem"]:has(input[type="checkbox"]:checked) p,
+.ProseMirror li.task-item:has(input[type="checkbox"]:checked) p,
+.ProseMirror
+  li[data-type="taskItem"]:has(input[type="checkbox"]:checked)
+  label
+  > div,
+.ProseMirror li.task-item:has(input[type="checkbox"]:checked) label > div {
+  text-decoration: line-through !important;
+  opacity: 0.6 !important;
+  color: hsl(var(--muted-foreground)) !important;
 }
 
 /* Task check animation - smooth scale with glow */

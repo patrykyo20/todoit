@@ -139,6 +139,7 @@ export const CreateTaskDialog: FC<CreateTaskDialogProps> = ({
                 }
               }}
               projectId={projectId}
+              enableKeyboardShortcuts={isOpen && state.shouldShowForm}
             />
           )
         )}

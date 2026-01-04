@@ -1,6 +1,6 @@
 {
-  "name": "doerit",
-  "version": "0.1.0",
+  "name": "todoit",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "dev": "concurrently \"npx convex dev\" \"next dev\"",
@@ -15,6 +15,8 @@
     "@tiptap/extension-image": "^3.14.0",
     "@tiptap/extension-link": "^3.14.0",
     "@tiptap/extension-placeholder": "^3.14.0",
+    "@tiptap/extension-task-item": "^3.14.0",
+    "@tiptap/extension-task-list": "^3.14.0",
     "@tiptap/react": "^3.14.0",
     "@tiptap/starter-kit": "^3.14.0",
     "class-variance-authority": "^0.7.1",

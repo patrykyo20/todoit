@@ -34,6 +34,16 @@ export function Sidebar() {
   };
 
   const renderItems = (projectList: Array<Doc<"projects">>) => {
+    if (!projectList || projectList.length === 0) {
+      return [
+        {
+          id: "projects",
+          name: "",
+          link: "#",
+          icon: <Hash className="w-4 h-4" />,
+        },
+      ];
+    }
     return projectList.map(({ _id, name }, idx) => {
       return {
         ...(idx === 0 && { id: "projects" }),
@@ -45,11 +55,8 @@ export function Sidebar() {
   };
 
   const navItems = useMemo(() => {
-    if (projectList) {
-      const projectItems = renderItems(projectList);
-      return [...primaryNavItems, ...projectItems];
-    }
-    return primaryNavItems;
+    const projectItems = renderItems(projectList || []);
+    return [...primaryNavItems, ...projectItems];
   }, [projectList]);
 
   return (
@@ -85,25 +92,27 @@ export function Sidebar() {
                     className={cn(
                       "flex items-center text-left lg:gap-3 rounded-lg py-2 transition-all hover:text-primary justify-between w-full",
                       pathname === link
-                        ? "active rounded-lg bg-primary/10 text-primary transition-all hover:text-primary"
+                        ? "active rounded-lg bg-primary/10 text-primary transition-all px-2 hover:text-primary"
                         : "text-foreground "
                     )}
                   >
-                    <Link
-                      href={link}
-                      className={cn(
-                        "flex items-center text-left gap-3 rounded-lg transition-all hover:text-primary hover:bg-muted/50 w-full cursor-pointer px-2 py-1.5 -mx-2 -my-1.5"
-                      )}
-                    >
-                      <div className="flex gap-4 items-center w-full">
-                        <div className="flex gap-2 items-center">
-                          <p className="flex text-base text-left">
-                            {icon || <Hash />}
-                          </p>
-                          <p>{name}</p>
+                    {name && link !== "#" ? (
+                      <Link
+                        href={link}
+                        className={cn(
+                          "flex items-center text-left gap-3 rounded-lg transition-all hover:text-primary hover:bg-muted/50 w-full cursor-pointer px-2 py-1.5 -mx-2 -my-1.5"
+                        )}
+                      >
+                        <div className="flex gap-4 items-center w-full">
+                          <div className="flex gap-2 items-center">
+                            <p className="flex text-base text-left">
+                              {icon || <Hash />}
+                            </p>
+                            <p>{name}</p>
+                          </div>
                         </div>
-                      </div>
-                    </Link>
+                      </Link>
+                    ) : null}
                     {/* TODO: Add AddLabelDialog component */}
                     {id === "filters" && (
                       <Dialog>

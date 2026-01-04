@@ -150,7 +150,6 @@ export function ReAuthWarning({ accountInfo, isConnected }: ReAuthWarningProps) 
               });
 
               const result = await deleteAllAccountsAndSessions();
-              console.log("🗑️ Deleted:", result);
 
               localStorage.clear();
               sessionStorage.clear();
@@ -171,7 +170,6 @@ export function ReAuthWarning({ accountInfo, isConnected }: ReAuthWarningProps) 
                 redirect: true,
               });
             } catch (error) {
-              console.error("Error during nuclear re-authentication:", error);
               toast({
                 title: "❌ Error",
                 description:

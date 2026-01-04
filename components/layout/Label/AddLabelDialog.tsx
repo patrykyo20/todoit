@@ -64,8 +64,7 @@ const AddLabelDialog: FC = () => {
           duration: 5000,
         });
       }
-    } catch (error) {
-      console.error("Error creating label:", error);
+    } catch {
       toast({
         title: "❌ Error",
         description: "An error occurred while creating the label.",

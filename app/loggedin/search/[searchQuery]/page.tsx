@@ -30,15 +30,12 @@ export default function Search() {
       setSearchResults([]);
 
       try {
-        console.log("Search: Starting search for:", decodedQuery.trim());
         const results = await vectorSearch({
           query: decodedQuery.trim(),
         });
 
-        console.log("Search: Received results:", results);
         setSearchResults(results || []);
       } catch (error) {
-        console.error("Search error:", error);
         const errorMessage = error instanceof Error 
           ? error.message 
           : "Failed to search tasks. Please try again.";

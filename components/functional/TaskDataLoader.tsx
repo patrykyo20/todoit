@@ -7,8 +7,6 @@ import { useTaskStore } from "@/stores/taskStore";
 import { memo } from "react";
 
 function TaskDataLoaderComponent() {
-  console.count("TaskDataLoader");
-
   const setTasksDataRef = useRef(useTaskStore.getState().setTasksData);
   const setProjectsRef = useRef(useTaskStore.getState().setProjects);
   const setLoadingRef = useRef(useTaskStore.getState().setLoading);

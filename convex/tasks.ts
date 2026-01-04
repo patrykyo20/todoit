@@ -184,16 +184,55 @@ export const totalTasks = query({
 export const checkTask = mutation({
   args: { taskId: v.id("tasks") },
   handler: async (ctx, { taskId }) => {
-    const newTaskId = await ctx.db.patch(taskId, { isCompleted: true });
-    return newTaskId;
+    const userId = await handleUserId(ctx);
+    if (!userId) {
+      return null;
+    }
+
+    await ctx.db.patch(taskId, { isCompleted: true });
+
+    const subtasks = await ctx.db
+      .query("subTasks")
+      .filter((q) => q.eq(q.field("userId"), userId))
+      .filter((q) => q.eq(q.field("parentId"), taskId))
+      .collect();
+
+    await Promise.all(
+      subtasks.map((subtask) =>
+        ctx.db.patch(subtask._id, { isCompleted: true })
+      )
+    );
+
+    return taskId;
   },
 });
 
 export const uncheckTask = mutation({
   args: { taskId: v.id("tasks") },
   handler: async (ctx, { taskId }) => {
-    const newTaskId = await ctx.db.patch(taskId, { isCompleted: false });
-    return newTaskId;
+    const userId = await handleUserId(ctx);
+    if (!userId) {
+      return null;
+    }
+
+    // Update task status
+    await ctx.db.patch(taskId, { isCompleted: false });
+
+    // Uncheck all subtasks (regardless of their current status)
+    const subtasks = await ctx.db
+      .query("subTasks")
+      .filter((q) => q.eq(q.field("userId"), userId))
+      .filter((q) => q.eq(q.field("parentId"), taskId))
+      .collect();
+
+    // Uncheck all subtasks in parallel
+    await Promise.all(
+      subtasks.map((subtask) =>
+        ctx.db.patch(subtask._id, { isCompleted: false })
+      )
+    );
+
+    return taskId;
   },
 });
 
@@ -211,7 +250,17 @@ export const createTask = mutation({
   },
   handler: async (
     ctx,
-    { taskName, description, priority, dueDate, startDate, endDate, projectId, labelId, embedding }
+    {
+      taskName,
+      description,
+      priority,
+      dueDate,
+      startDate,
+      endDate,
+      projectId,
+      labelId,
+      embedding,
+    }
   ) => {
     try {
       const userId = await handleUserId(ctx);
@@ -252,7 +301,16 @@ export const createTaskAndEmbeddings = action({
   },
   handler: async (
     ctx,
-    { taskName, description, priority, dueDate, startDate, endDate, projectId, labelId }
+    {
+      taskName,
+      description,
+      priority,
+      dueDate,
+      startDate,
+      endDate,
+      projectId,
+      labelId,
+    }
   ) => {
     const embedding = await getEmbeddingsWithAI(taskName);
     await ctx.runMutation(api.tasks.createTask, {
@@ -281,11 +339,14 @@ export const groupTasksByDate = query({
         .filter((q) => q.gt(q.field("dueDate"), new Date().getTime()))
         .collect();
 
-      const groupedtasks = tasks.reduce<Record<string, typeof tasks>>((acc, task) => {
-        const dueDate = new Date(task?.dueDate ?? 0).toDateString();
-        acc[dueDate] = (acc[dueDate] || []).concat(task);
-        return acc;
-      }, {});
+      const groupedtasks = tasks.reduce<Record<string, typeof tasks>>(
+        (acc, task) => {
+          const dueDate = new Date(task?.dueDate ?? 0).toDateString();
+          acc[dueDate] = (acc[dueDate] || []).concat(task);
+          return acc;
+        },
+        {}
+      );
 
       return groupedtasks;
     }
@@ -323,7 +384,21 @@ export const updateTask = mutation({
     labelId: v.optional(v.id("labels")),
     googleCalendarEventId: v.optional(v.union(v.string(), v.null())),
   },
-  handler: async (ctx, { taskId, taskName, description, priority, dueDate, startDate, endDate, projectId, labelId, googleCalendarEventId }) => {
+  handler: async (
+    ctx,
+    {
+      taskId,
+      taskName,
+      description,
+      priority,
+      dueDate,
+      startDate,
+      endDate,
+      projectId,
+      labelId,
+      googleCalendarEventId,
+    }
+  ) => {
     try {
       const userId = await handleUserId(ctx);
       if (userId) {
@@ -342,11 +417,13 @@ export const updateTask = mutation({
         if (description !== undefined) updateData.description = description;
         if (priority !== undefined) updateData.priority = priority;
         if (dueDate !== undefined) updateData.dueDate = dueDate;
-        if (startDate !== undefined) updateData.startDate = startDate || undefined;
+        if (startDate !== undefined)
+          updateData.startDate = startDate || undefined;
         if (endDate !== undefined) updateData.endDate = endDate || undefined;
         if (projectId !== undefined) updateData.projectId = projectId;
         if (labelId !== undefined) updateData.labelId = labelId;
-        if (googleCalendarEventId !== undefined) updateData.googleCalendarEventId = googleCalendarEventId || undefined;
+        if (googleCalendarEventId !== undefined)
+          updateData.googleCalendarEventId = googleCalendarEventId || undefined;
 
         await ctx.db.patch(taskId, updateData);
         return taskId;
@@ -411,10 +488,7 @@ export const getAllTasksData = query({
 
     // Filter upcoming tasks (future dates, not completed)
     const upcomingTasks = tasks.filter(
-      (t) =>
-        t.dueDate &&
-        t.dueDate > nowStartTimestamp &&
-        !t.isCompleted
+      (t) => t.dueDate && t.dueDate > nowStartTimestamp && !t.isCompleted
     );
 
     // Group upcoming tasks by date

@@ -43,11 +43,21 @@ export function TaskList() {
         />
       </div>
       <div className="flex flex-col gap-1 py-4">
-        <Tasks items={tasksData.incomplete} sortBy={sortBy} sortOrder={sortOrder} />
+        <Tasks 
+          items={tasksData.incomplete} 
+          sortBy={sortBy} 
+          sortOrder={sortOrder}
+          keyPrefix="incomplete"
+        />
       </div>
       <AddTaskWrapper />
       <div className="flex flex-col gap-1 py-4">
-        <Tasks items={tasksData.completed} sortBy={sortBy} sortOrder={sortOrder} />
+        <Tasks 
+          items={tasksData.completed} 
+          sortBy={sortBy} 
+          sortOrder={sortOrder}
+          keyPrefix="completed"
+        />
       </div>
       <CompletedTasks totalTasks={tasksData.total} />
     </>

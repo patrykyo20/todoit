@@ -35,7 +35,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/Popover";
 import { Calendar as CalendarComponent } from "@/components/ui/Calendar";
-import { CalendarIcon, Clock, Loader2 } from "lucide-react";
+import { CalendarIcon, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useForm } from "react-hook-form";
@@ -74,7 +74,7 @@ export function AddEventDialog({
 
   const defaultStartDate = initialDate || initialStartTime || new Date();
   const defaultEndDate = initialDate || initialEndTime || new Date();
-  
+
   // Set default times (9 AM to 10 AM if not provided)
   const defaultStartTime = initialStartTime
     ? format(initialStartTime, "HH:mm")
@@ -124,9 +124,7 @@ export function AddEventDialog({
         projectId: data.projectId
           ? (data.projectId as Id<"projects">)
           : undefined,
-        labelId: data.labelId
-          ? (data.labelId as Id<"labels">)
-          : undefined,
+        labelId: data.labelId ? (data.labelId as Id<"labels">) : undefined,
         priority: data.priority,
       });
 
@@ -138,7 +136,6 @@ export function AddEventDialog({
       form.reset();
       onClose();
     } catch (error) {
-      console.error("Error creating event:", error);
       const errorMessage =
         error instanceof Error ? error.message : "Failed to create event";
       toast({
@@ -242,11 +239,7 @@ export function AddEventDialog({
                   <FormItem>
                     <FormLabel>Start Time</FormLabel>
                     <FormControl>
-                      <Input
-                        type="time"
-                        disabled={isLoading}
-                        {...field}
-                      />
+                      <Input type="time" disabled={isLoading} {...field} />
                     </FormControl>
                   </FormItem>
                 )}
@@ -300,11 +293,7 @@ export function AddEventDialog({
                   <FormItem>
                     <FormLabel>End Time</FormLabel>
                     <FormControl>
-                      <Input
-                        type="time"
-                        disabled={isLoading}
-                        {...field}
-                      />
+                      <Input type="time" disabled={isLoading} {...field} />
                     </FormControl>
                   </FormItem>
                 )}
@@ -318,7 +307,9 @@ export function AddEventDialog({
                 <FormItem>
                   <FormLabel>Project (Optional)</FormLabel>
                   <Select
-                    onValueChange={(value) => field.onChange(value || undefined)}
+                    onValueChange={(value) =>
+                      field.onChange(value || undefined)
+                    }
                     value={field.value || undefined}
                     disabled={isLoading}
                   >

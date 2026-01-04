@@ -40,7 +40,7 @@ export async function sendNotification(message: string) {
     await webpush.sendNotification(
       subscription as PushSubscription,
       JSON.stringify({
-        title: "Doerit Notification",
+        title: "todoit Notification",
         body: message,
         icon: "/icon-192x192.png",
       })

@@ -1,9 +1,12 @@
 "use client";
 import { Doc } from "@/convex/_generated/dataModel";
 import { Button } from "@/components/ui/Button";
-import { Calendar as CalendarIcon, CheckCircle2, RefreshCw } from "lucide-react";
+import {
+  Calendar as CalendarIcon,
+  CheckCircle2,
+  RefreshCw,
+} from "lucide-react";
 import moment from "moment";
-import { Id } from "@/convex/_generated/dataModel";
 
 interface ListViewProps {
   tasksWithDates: Array<Doc<"tasks">>;
@@ -60,7 +63,8 @@ export function ListView({
                     </>
                   ) : task.dueDate ? (
                     <>
-                      Due: {moment(task.dueDate).format("MMM D, YYYY [at] h:mm A")}
+                      Due:{" "}
+                      {moment(task.dueDate).format("MMM D, YYYY [at] h:mm A")}
                     </>
                   ) : null}
                 </p>
