@@ -1,7 +1,7 @@
 import { auth } from "@/auth";
 import Providers from "@/providers/providers";
 import { MobileNav, Sidebar } from "@/components/layout";
-import { TaskDataLoader } from "@/components/functional/TaskDataLoader";
+import { TaskDataLoader } from "@/components/functional/TaskDataLoader/TaskDataLoader";
 
 export default async function LoggedInLayout({
   children,

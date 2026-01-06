@@ -29,10 +29,15 @@ export const useKeyboardShortcuts = ({
 
     const handleKeyDown = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement;
+      
+      // Check if we're in ProseMirror editor
+      const isInProseMirror = target.closest(".ProseMirror") !== null;
+      
       const isInInputField =
         target.tagName === "INPUT" ||
         target.tagName === "TEXTAREA" ||
-        target.isContentEditable;
+        target.isContentEditable ||
+        isInProseMirror;
 
       // Save shortcuts (work everywhere)
       if ((e.metaKey || e.ctrlKey) && e.key === "s") {
@@ -52,7 +57,7 @@ export const useKeyboardShortcuts = ({
         return;
       }
 
-      // Enter: Save (only when not in input field)
+      // Enter: Save (only when not in input field or ProseMirror)
       if (
         !isInInputField &&
         e.key === "Enter" &&

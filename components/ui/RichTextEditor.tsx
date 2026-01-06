@@ -44,40 +44,33 @@ export const RichTextEditor: FC<RichTextEditorProps> = memo(
     const onChangeRef = useRef(onChange);
     const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-    // Keep onChange ref up to date
     useEffect(() => {
       onChangeRef.current = onChange;
     }, [onChange]);
 
-    // Memoize handleUpdate to prevent editor recreation
     const handleUpdate = useCallback(
       ({ editor: editorInstance }: { editor: { getHTML: () => string } }) => {
         const newValue = editorInstance.getHTML();
         
-        // Skip if value hasn't actually changed
         if (newValue === previousValueRef.current) {
           return;
         }
 
-        // Update ref immediately to track current state
         previousValueRef.current = newValue;
         isUpdatingRef.current = true;
 
-        // Clear previous debounce timer
         if (debounceTimerRef.current) {
           clearTimeout(debounceTimerRef.current);
         }
 
-        // Debounce the onChange call to reduce re-renders
         debounceTimerRef.current = setTimeout(() => {
           onChangeRef.current(newValue);
-          // Reset flag after a small delay to ensure parent state update completes
           setTimeout(() => {
             isUpdatingRef.current = false;
           }, 50);
-        }, 150); // 150ms debounce - adjust as needed
+        }, 150);
       },
-      [] // Empty deps - we use refs for onChange
+      []
     );
 
     const editor = useEditor({
@@ -104,13 +97,13 @@ export const RichTextEditor: FC<RichTextEditorProps> = memo(
         }),
         TaskList.configure({
           HTMLAttributes: {
-            class: "task-list",
+            class: "task-list not-prose",
           },
         }),
         TaskItem.configure({
           nested: true,
           HTMLAttributes: {
-            class: "task-item",
+            class: "task-item flex gap-2",
           },
         }),
         Placeholder.configure({
@@ -120,7 +113,7 @@ export const RichTextEditor: FC<RichTextEditorProps> = memo(
       content: value,
       editable,
       immediatelyRender: false,
-      onUpdate: handleUpdate, // Use onUpdate prop - it's stable thanks to useCallback
+      onUpdate: handleUpdate,
     });
 
     const generateUploadUrl = useAction(api.files.generateUploadUrl);
@@ -129,8 +122,6 @@ export const RichTextEditor: FC<RichTextEditorProps> = memo(
     const [isUploading, setIsUploading] = useState(false);
 
     useEffect(() => {
-      // Aktualizuj content tylko gdy przychodzi z zewnątrz (nie z edytora)
-      // i tylko gdy wartość faktycznie się zmieniła
       if (
         editor &&
         !isUpdatingRef.current &&
@@ -138,12 +129,8 @@ export const RichTextEditor: FC<RichTextEditorProps> = memo(
         value !== editor.getHTML()
       ) {
         const { from, to } = editor.state.selection;
-        editor.commands.setContent(value, { emitUpdate: false }); // nie emituj update
-
-        // Przywróć pozycję kursora
+        editor.commands.setContent(value, { emitUpdate: false });
         editor.commands.setTextSelection({ from, to });
-
-        // Zaktualizuj ref z nową wartością
         previousValueRef.current = value;
       }
     }, [value, editor]);
@@ -154,10 +141,8 @@ export const RichTextEditor: FC<RichTextEditorProps> = memo(
 
         setIsUploading(true);
         try {
-          // Generuj URL do uploadu
           const uploadUrl = await generateUploadUrl();
 
-          // Upload pliku do Convex Storage
           const result = await fetch(uploadUrl, {
             method: "POST",
             headers: { "Content-Type": file.type },
@@ -165,19 +150,14 @@ export const RichTextEditor: FC<RichTextEditorProps> = memo(
           });
 
           const { storageId } = await result.json();
-
-          // Pobierz URL obrazu
           const imageUrl = await getImageUrl({ storageId });
 
-          // Dodaj obraz do edytora
           if (imageUrl) {
             editor.chain().focus().setImage({ src: imageUrl }).run();
           }
         } catch (error) {
           console.error("Error uploading image:", error);
-          // Fallback: użyj base64 dla małych obrazów
           if (file.size < 1000000) {
-            // < 1MB
             const reader = new FileReader();
             reader.onload = (e) => {
               const base64 = e.target?.result as string;
@@ -197,7 +177,6 @@ export const RichTextEditor: FC<RichTextEditorProps> = memo(
     useEffect(() => {
       if (!editor) return;
 
-      // Obsługa wklejania obrazów ze schowka
       const handlePaste = async (e: ClipboardEvent) => {
         const items = e.clipboardData?.items;
         if (!items) return;
@@ -214,7 +193,6 @@ export const RichTextEditor: FC<RichTextEditorProps> = memo(
         }
       };
 
-      // Obsługa drag & drop
       const handleDrop = async (e: DragEvent) => {
         const files = e.dataTransfer?.files;
         if (!files || files.length === 0) return;
@@ -244,7 +222,6 @@ export const RichTextEditor: FC<RichTextEditorProps> = memo(
         if (file && file.type.startsWith("image/")) {
           await uploadImage(file);
         }
-        // Reset input
         if (fileInputRef.current) {
           fileInputRef.current.value = "";
         }
@@ -252,7 +229,6 @@ export const RichTextEditor: FC<RichTextEditorProps> = memo(
       [uploadImage]
     );
 
-    // Memoize toolbar button handlers
     const toggleBold = useCallback(() => {
       if (!editor) return;
       editor.chain().focus().toggleBold().run();
@@ -400,17 +376,18 @@ export const RichTextEditor: FC<RichTextEditorProps> = memo(
           className={cn(
             "prose prose-sm max-w-none p-4 min-h-[120px] focus:outline-none",
             "[&_.ProseMirror]:outline-none [&_.ProseMirror]:min-h-[120px]",
-            // Force checkbox visibility
-            "[&_input[type='checkbox']]:block [&_input[type='checkbox']]:!visible [&_input[type='checkbox']]:!w-5 [&_input[type='checkbox']]:!h-5"
+            // Style dla task list
+            "[&_ul[data-type='taskList']]:list-none [&_ul[data-type='taskList']]:pl-0",
+            "[&_li[data-type='taskItem']]:flex [&_li[data-type='taskItem']]:items-start [&_li[data-type='taskItem']]:gap-2",
+            "[&_li[data-type='taskItem']>label]:flex [&_li[data-type='taskItem']>label]:items-center [&_li[data-type='taskItem']>label]:pt-0.5",
+            "[&_li[data-type='taskItem']>label>input[type='checkbox']]:m-0 [&_li[data-type='taskItem']>label>input[type='checkbox']]:w-4 [&_li[data-type='taskItem']>label>input[type='checkbox']]:h-4",
+            "[&_li[data-type='taskItem']>div]:flex-1"
           )}
         />
       </div>
     );
   },
   (prevProps, nextProps) => {
-    // Custom comparison function for memo
-    // Only re-render if content, placeholder, className, or editable changes
-    // Ignore onChange function reference changes to prevent unnecessary re-renders
     return (
       prevProps.value === nextProps.value &&
       prevProps.placeholder === nextProps.placeholder &&

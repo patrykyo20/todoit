@@ -35,7 +35,7 @@ export const ConvexAdapter: Adapter = {
     return { ...session, id: newId };
   },
   async createUser(user: User) {
-    const { id, ...userWithoutId } = user;
+    const { ...userWithoutId } = user;
     const newId = await callMutation(api.authAdopter.createUser, {
       user: toDB(userWithoutId),
     });
@@ -160,7 +160,9 @@ if (process.env.CONVEX_AUTH_ADAPTER_SECRET === undefined) {
   throw new Error("Missing CONVEX_AUTH_ADAPTER_SECRET environment variable");
 }
 
-function addSecret<T extends Record<string, unknown>>(args: T): T & { secret: string } {
+function addSecret<T extends Record<string, unknown>>(
+  args: T
+): T & { secret: string } {
   return { ...args, secret: process.env.CONVEX_AUTH_ADAPTER_SECRET! };
 }
 

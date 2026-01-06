@@ -1,4 +1,5 @@
 export * from "./Button";
+export * from "./Breadcrumb";
 export * from "./Calendar";
 export * from "./Card";
 export * from "./Checkbox";

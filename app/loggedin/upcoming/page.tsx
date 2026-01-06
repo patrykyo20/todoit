@@ -2,14 +2,14 @@
 
 import { Dot } from "lucide-react";
 import moment from "moment";
-import { AddTaskWrapper } from "@/components/layout/Task/AddTaskButton";
+import { AddTaskWrapper } from "@/components/functional/AddTask";
 import { Tasks } from "@/components/layout";
 import { TaskSkeleton } from "@/components/layout/Task/TaskSkeleton";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { useTaskStore } from "@/stores/taskStore";
 import { TaskSort } from "@/components/layout/Task/TaskSort";
 import { useState } from "react";
-import { SortBy, SortOrder } from "@/components/layout/Task/Tasks";
+import type { SortBy, SortOrder } from "@/types";
 
 export default function Upcoming() {
   const { tasksData, isLoading } = useTaskStore();

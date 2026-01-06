@@ -1,7 +1,7 @@
 import { query, action, mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { handleUserId } from "./auth";
-import { Id } from "./_generated/dataModel";
+import { Id, Doc } from "./_generated/dataModel";
 import { api } from "./_generated/api";
 import type { QueryCtx } from "./_generated/server";
 import moment from "moment";
@@ -28,7 +28,11 @@ async function getGoogleAccessTokenFromQuery(ctx: QueryCtx, userId: Id<"users">)
 
 
 // Refresh Google OAuth token
-async function refreshGoogleToken(refreshToken: string) {
+async function refreshGoogleToken(refreshToken: string): Promise<{
+  access_token: string;
+  expires_at: number;
+  refresh_token?: string;
+}> {
   const response = await fetch("https://oauth2.googleapis.com/token", {
     method: "POST",
     headers: {
@@ -46,7 +50,12 @@ async function refreshGoogleToken(refreshToken: string) {
     throw new Error("Failed to refresh Google token");
   }
 
-  const data = await response.json();
+  const data = await response.json() as {
+    access_token: string;
+    expires_in: number;
+    refresh_token?: string;
+  };
+  
   return {
     access_token: data.access_token,
     expires_at: Date.now() + (data.expires_in * 1000),
@@ -90,23 +99,62 @@ export const createCalendarEvent = action({
       throw new Error("Task must have an end date or due date to create calendar event");
     }
 
-    const event: {
+    // Check if task has time (not just date)
+    // If time is at midnight (00:00:00) or end of day (23:59:59), treat as all-day event
+    const startDate = new Date(startTime);
+    const endDate = new Date(endTime);
+    const startHours = startDate.getHours();
+    const startMinutes = startDate.getMinutes();
+    const startSeconds = startDate.getSeconds();
+    const endHours = endDate.getHours();
+    const endMinutes = endDate.getMinutes();
+    const endSeconds = endDate.getSeconds();
+    
+    // Check if it's an all-day event (starts at 00:00:00 and ends at 23:59:59 or next day 00:00:00)
+    const isAllDay = 
+      (startHours === 0 && startMinutes === 0 && startSeconds === 0) &&
+      ((endHours === 23 && endMinutes === 59 && endSeconds === 59) ||
+       (endHours === 0 && endMinutes === 0 && endSeconds === 0));
+
+    let event: {
       summary: string;
       description: string;
-      start: { dateTime: string; timeZone: string };
-      end: { dateTime: string; timeZone: string };
-    } = {
-      summary: task.taskName || "Task",
-      description: task.description || "",
-      start: {
-        dateTime: new Date(startTime).toISOString(),
-        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-      },
-      end: {
-        dateTime: new Date(endTime).toISOString(),
-        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-      },
+      start: { date?: string; dateTime?: string; timeZone?: string };
+      end: { date?: string; dateTime?: string; timeZone?: string };
     };
+
+    if (isAllDay) {
+      // All-day event - use date format (YYYY-MM-DD)
+      const startDateStr = startDate.toISOString().split('T')[0];
+      // For end date, add 1 day if it's the same day (Google Calendar end date is exclusive)
+      const endDateForCalendar = new Date(endDate);
+      if (endDateForCalendar.getTime() === startDate.getTime() || 
+          (endDateForCalendar.getHours() === 0 && endDateForCalendar.getMinutes() === 0)) {
+        endDateForCalendar.setDate(endDateForCalendar.getDate() + 1);
+      }
+      const endDateStr = endDateForCalendar.toISOString().split('T')[0];
+      
+      event = {
+        summary: task.taskName || "Task",
+        description: task.description || "",
+        start: { date: startDateStr },
+        end: { date: endDateStr },
+      };
+    } else {
+      // Timed event - use dateTime format
+      event = {
+        summary: task.taskName || "Task",
+        description: task.description || "",
+        start: {
+          dateTime: startDate.toISOString(),
+          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        },
+        end: {
+          dateTime: endDate.toISOString(),
+          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        },
+      };
+    }
 
     const response: Response = await fetch("https://www.googleapis.com/calendar/v3/calendars/primary/events", {
       method: "POST",
@@ -300,23 +348,62 @@ export const updateCalendarEvent = action({
       throw new Error("Task must have an end date or due date to update calendar event");
     }
 
-    const event: {
+    // Check if task has time (not just date)
+    // If time is at midnight (00:00:00) or end of day (23:59:59), treat as all-day event
+    const startDate = new Date(startTime);
+    const endDate = new Date(endTime);
+    const startHours = startDate.getHours();
+    const startMinutes = startDate.getMinutes();
+    const startSeconds = startDate.getSeconds();
+    const endHours = endDate.getHours();
+    const endMinutes = endDate.getMinutes();
+    const endSeconds = endDate.getSeconds();
+    
+    // Check if it's an all-day event (starts at 00:00:00 and ends at 23:59:59 or next day 00:00:00)
+    const isAllDay = 
+      (startHours === 0 && startMinutes === 0 && startSeconds === 0) &&
+      ((endHours === 23 && endMinutes === 59 && endSeconds === 59) ||
+       (endHours === 0 && endMinutes === 0 && endSeconds === 0));
+
+    let event: {
       summary: string;
       description: string;
-      start: { dateTime: string; timeZone: string };
-      end: { dateTime: string; timeZone: string };
-    } = {
-      summary: task.taskName || "Task",
-      description: task.description || "",
-      start: {
-        dateTime: new Date(startTime).toISOString(),
-        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-      },
-      end: {
-        dateTime: new Date(endTime).toISOString(),
-        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-      },
+      start: { date?: string; dateTime?: string; timeZone?: string };
+      end: { date?: string; dateTime?: string; timeZone?: string };
     };
+
+    if (isAllDay) {
+      // All-day event - use date format (YYYY-MM-DD)
+      const startDateStr = startDate.toISOString().split('T')[0];
+      // For end date, add 1 day if it's the same day (Google Calendar end date is exclusive)
+      const endDateForCalendar = new Date(endDate);
+      if (endDateForCalendar.getTime() === startDate.getTime() || 
+          (endDateForCalendar.getHours() === 0 && endDateForCalendar.getMinutes() === 0)) {
+        endDateForCalendar.setDate(endDateForCalendar.getDate() + 1);
+      }
+      const endDateStr = endDateForCalendar.toISOString().split('T')[0];
+      
+      event = {
+        summary: task.taskName || "Task",
+        description: task.description || "",
+        start: { date: startDateStr },
+        end: { date: endDateStr },
+      };
+    } else {
+      // Timed event - use dateTime format
+      event = {
+        summary: task.taskName || "Task",
+        description: task.description || "",
+        start: {
+          dateTime: startDate.toISOString(),
+          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        },
+        end: {
+          dateTime: endDate.toISOString(),
+          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        },
+      };
+    }
 
     const response: Response = await fetch(
       `https://www.googleapis.com/calendar/v3/calendars/primary/events/${task.googleCalendarEventId}`,
@@ -385,7 +472,7 @@ export const deleteCalendarEvent = action({
     // Remove calendar event ID from task
     await ctx.runMutation(api.tasks.updateTask, {
       taskId,
-      googleCalendarEventId: undefined,
+      googleCalendarEventId: null,
     });
 
     return true;
@@ -441,7 +528,7 @@ export const refreshAccessToken = action({
 // Get account for refresh (internal query)
 export const getAccountForRefresh = query({
   args: {},
-  handler: async (ctx) => {
+  handler: async (ctx): Promise<Doc<"accounts"> | null> => {
     const userId = await handleUserId(ctx);
     if (!userId) {
       return null;
@@ -676,6 +763,135 @@ export const debugUserAccounts = query({
         expires: sess.expires,
         createdAt: sess._creationTime,
       })),
+    };
+  },
+});
+
+// Delete all calendar events created by this app for current user
+export const deleteAllCalendarEvents = action({
+  args: {},
+  handler: async (ctx): Promise<{
+    deletedEvents: number;
+    cleanedTasks: number;
+    totalTasks: number;
+    errors?: string[];
+    message: string;
+  }> => {
+    const userId = await handleUserId(ctx);
+    if (!userId) {
+      throw new Error("Unauthorized");
+    }
+
+    // Get all tasks with calendar event IDs - use direct query in action context
+    const tasks = await ctx.runQuery(api.tasks.get, {});
+    console.log(`Total tasks for user ${userId}: ${tasks.length}`);
+    
+    const userTasks = tasks.filter(
+      (task: Doc<"tasks">) => {
+        const hasEventId = task.googleCalendarEventId && 
+          typeof task.googleCalendarEventId === 'string' && 
+          task.googleCalendarEventId.trim() !== "";
+        if (hasEventId) {
+          console.log(`Task ${task._id} has calendar event: ${task.googleCalendarEventId}`);
+        }
+        return task.userId === userId && hasEventId;
+      }
+    );
+
+    console.log(`Found ${userTasks.length} tasks with calendar events for user ${userId}`);
+
+    if (userTasks.length === 0) {
+      return {
+        deletedEvents: 0,
+        cleanedTasks: 0,
+        totalTasks: 0,
+        message: "No tasks with calendar events found",
+      };
+    }
+
+    let accessToken: string;
+    try {
+      accessToken = await ctx.runQuery(api.googleCalendar.getAccessToken, {});
+    } catch {
+      // Token expired, refresh it
+      accessToken = await ctx.runAction(api.googleCalendar.refreshAccessToken, {});
+    }
+
+    let deletedCount = 0;
+    let cleanedCount = 0;
+    const errors: string[] = [];
+
+    // Delete all calendar events and clean tasks in parallel
+    const deletePromises = userTasks.map(async (task: Doc<"tasks">) => {
+      if (!task.googleCalendarEventId || task.googleCalendarEventId.trim() === "") {
+        return { success: false, taskId: task._id, error: "No event ID" };
+      }
+
+      const eventId = task.googleCalendarEventId;
+
+      try {
+        // Delete from Google Calendar
+        const response: Response = await fetch(
+          `https://www.googleapis.com/calendar/v3/calendars/primary/events/${eventId}`,
+          {
+            method: "DELETE",
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          }
+        );
+
+        if (response.ok || response.status === 404) {
+          deletedCount++;
+          console.log(`Deleted event ${eventId} for task ${task._id}`);
+        } else {
+          const errorText = await response.text();
+          const error = `Failed to delete event ${eventId}: ${response.status} ${errorText}`;
+          errors.push(`Task ${task._id}: ${error}`);
+          console.error(error);
+        }
+
+        // Remove calendar event ID from task (always do this, even if delete failed)
+        await ctx.runMutation(api.tasks.updateTask, {
+          taskId: task._id,
+          googleCalendarEventId: null,
+        });
+        cleanedCount++;
+        console.log(`Cleaned task ${task._id}`);
+
+        return { success: true, taskId: task._id };
+      } catch (error) {
+        const errorMsg = error instanceof Error ? error.message : "Unknown error";
+        errors.push(`Task ${task._id}: ${errorMsg}`);
+        console.error(`Error processing task ${task._id}:`, error);
+
+        // Still try to clean the task even if delete failed
+        try {
+          await ctx.runMutation(api.tasks.updateTask, {
+            taskId: task._id,
+            googleCalendarEventId: null,
+          });
+          cleanedCount++;
+        } catch (cleanError) {
+          console.error(`Failed to clean task ${task._id}:`, cleanError);
+        }
+
+        return { success: false, taskId: task._id, error: errorMsg };
+      }
+    });
+
+    await Promise.all(deletePromises);
+
+    if (errors.length > 0) {
+      console.warn("Some events failed to delete:", errors);
+    }
+
+    return {
+      deletedEvents: deletedCount,
+      cleanedTasks: cleanedCount,
+      totalTasks: userTasks.length,
+      errors: errors.length > 0 ? errors : undefined,
+      message: `Deleted ${deletedCount} events and cleaned ${cleanedCount} tasks`,
     };
   },
 });

@@ -3,6 +3,7 @@ import { v } from "convex/values";
 import { handleUserId } from "./auth";
 import { getEmbeddingsWithAI } from "./openapi";
 import { api } from "./_generated/api";
+import { Id } from "./_generated/dataModel";
 
 export const get = query({
   args: {},
@@ -163,6 +164,48 @@ export const incompleteSubTasks = query({
       return tasks;
     }
     return [];
+  },
+});
+
+export const updateSubTask = mutation({
+  args: {
+    taskId: v.id("subTasks"),
+    taskName: v.optional(v.string()),
+    description: v.optional(v.string()),
+    priority: v.optional(v.number()),
+    dueDate: v.optional(v.number()),
+    projectId: v.optional(v.id("projects")),
+    labelId: v.optional(v.id("labels")),
+  },
+  handler: async (
+    ctx,
+    { taskId, taskName, description, priority, dueDate, projectId, labelId }
+  ) => {
+    try {
+      const userId = await handleUserId(ctx);
+      if (userId) {
+        const updateData: {
+          taskName?: string;
+          description?: string;
+          priority?: number;
+          dueDate?: number;
+          projectId?: Id<"projects">;
+          labelId?: Id<"labels">;
+        } = {};
+        if (taskName !== undefined) updateData.taskName = taskName;
+        if (description !== undefined) updateData.description = description;
+        if (priority !== undefined) updateData.priority = priority;
+        if (dueDate !== undefined) updateData.dueDate = dueDate;
+        if (projectId !== undefined) updateData.projectId = projectId;
+        if (labelId !== undefined) updateData.labelId = labelId;
+
+        await ctx.db.patch(taskId, updateData);
+        return taskId;
+      }
+      return null;
+    } catch {
+      return null;
+    }
   },
 });
 

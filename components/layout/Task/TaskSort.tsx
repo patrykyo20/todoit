@@ -3,7 +3,7 @@
 import { FC } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/Select";
 import { ArrowUp, ArrowDown } from "lucide-react";
-import { SortBy, SortOrder } from "./Tasks";
+import type { SortBy, SortOrder } from "@/types";
 import { Button } from "@/components/ui/Button";
 
 interface TaskSortProps {

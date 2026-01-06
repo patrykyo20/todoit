@@ -244,6 +244,7 @@ export const createTask = mutation({
     dueDate: v.number(),
     startDate: v.optional(v.number()),
     endDate: v.optional(v.number()),
+    frequency: v.optional(v.string()),
     projectId: v.id("projects"),
     labelId: v.id("labels"),
     embedding: v.optional(v.array(v.float64())),
@@ -257,6 +258,7 @@ export const createTask = mutation({
       dueDate,
       startDate,
       endDate,
+      frequency,
       projectId,
       labelId,
       embedding,
@@ -273,6 +275,7 @@ export const createTask = mutation({
           dueDate,
           startDate,
           endDate,
+          frequency,
           projectId,
           labelId,
           isCompleted: false,
@@ -296,6 +299,7 @@ export const createTaskAndEmbeddings = action({
     dueDate: v.number(),
     startDate: v.optional(v.number()),
     endDate: v.optional(v.number()),
+    frequency: v.optional(v.string()),
     projectId: v.id("projects"),
     labelId: v.id("labels"),
   },
@@ -308,6 +312,7 @@ export const createTaskAndEmbeddings = action({
       dueDate,
       startDate,
       endDate,
+      frequency,
       projectId,
       labelId,
     }
@@ -320,6 +325,7 @@ export const createTaskAndEmbeddings = action({
       dueDate,
       startDate,
       endDate,
+      frequency,
       projectId,
       labelId,
       embedding,
@@ -341,9 +347,9 @@ export const groupTasksByDate = query({
 
       const groupedtasks = tasks.reduce<Record<string, typeof tasks>>(
         (acc, task) => {
-          const dueDate = new Date(task?.dueDate ?? 0).toDateString();
-          acc[dueDate] = (acc[dueDate] || []).concat(task);
-          return acc;
+        const dueDate = new Date(task?.dueDate ?? 0).toDateString();
+        acc[dueDate] = (acc[dueDate] || []).concat(task);
+        return acc;
         },
         {}
       );
@@ -380,6 +386,7 @@ export const updateTask = mutation({
     dueDate: v.optional(v.number()),
     startDate: v.optional(v.union(v.number(), v.null())),
     endDate: v.optional(v.union(v.number(), v.null())),
+    frequency: v.optional(v.union(v.string(), v.null())),
     projectId: v.optional(v.id("projects")),
     labelId: v.optional(v.id("labels")),
     googleCalendarEventId: v.optional(v.union(v.string(), v.null())),
@@ -394,6 +401,7 @@ export const updateTask = mutation({
       dueDate,
       startDate,
       endDate,
+      frequency,
       projectId,
       labelId,
       googleCalendarEventId,
@@ -409,6 +417,7 @@ export const updateTask = mutation({
           dueDate?: number;
           startDate?: number;
           endDate?: number;
+          frequency?: string;
           projectId?: Id<"projects">;
           labelId?: Id<"labels">;
           googleCalendarEventId?: string;
@@ -420,10 +429,14 @@ export const updateTask = mutation({
         if (startDate !== undefined)
           updateData.startDate = startDate || undefined;
         if (endDate !== undefined) updateData.endDate = endDate || undefined;
+        if (frequency !== undefined)
+          updateData.frequency = frequency || undefined;
         if (projectId !== undefined) updateData.projectId = projectId;
         if (labelId !== undefined) updateData.labelId = labelId;
-        if (googleCalendarEventId !== undefined)
-          updateData.googleCalendarEventId = googleCalendarEventId || undefined;
+        if (googleCalendarEventId !== undefined) {
+          // Allow null to clear the calendar event ID
+          updateData.googleCalendarEventId = googleCalendarEventId === null ? undefined : googleCalendarEventId;
+        }
 
         await ctx.db.patch(taskId, updateData);
         return taskId;

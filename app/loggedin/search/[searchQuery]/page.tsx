@@ -1,11 +1,15 @@
 "use client";
-import { Tasks } from "@/components/layout";
 import { api } from "@/convex/_generated/api";
 import { Doc } from "@/convex/_generated/dataModel";
 import { useAction } from "convex/react";
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
-import { Skeleton } from "@/components/ui/Skeleton";
+import { useEffect, useState, useCallback } from "react";
+import {
+  SearchSkeleton,
+  SearchError,
+  SearchBody,
+  SearchEmpty,
+} from "./_components";
 
 export default function Search() {
   const { searchQuery } = useParams<{ searchQuery: string }>();
@@ -17,84 +21,62 @@ export default function Search() {
 
   const vectorSearch = useAction(api.search.searchTasks);
 
-  useEffect(() => {
-    const handleSearch = async () => {
-      if (!decodedQuery || decodedQuery.trim() === "") {
-        setSearchResults([]);
-        setIsLoading(false);
-        return;
-      }
-
-      setIsLoading(true);
-      setError(null);
+  const handleSearch = useCallback(async () => {
+    if (!decodedQuery || decodedQuery.trim() === "") {
       setSearchResults([]);
+      setIsLoading(false);
+      return;
+    }
 
-      try {
-        const results = await vectorSearch({
-          query: decodedQuery.trim(),
-        });
+    setIsLoading(true);
+    setError(null);
+    setSearchResults([]);
 
-        setSearchResults(results || []);
-      } catch (error) {
-        const errorMessage = error instanceof Error 
-          ? error.message 
+    try {
+      const results = await vectorSearch({
+        query: decodedQuery.trim(),
+      });
+
+      setSearchResults(results || []);
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
           : "Failed to search tasks. Please try again.";
-        setError(errorMessage);
-        setSearchResults([]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    handleSearch();
+      setError(errorMessage);
+      setSearchResults([]);
+    } finally {
+      setIsLoading(false);
+    }
   }, [decodedQuery, vectorSearch]);
 
+  useEffect(() => {
+    handleSearch();
+  }, [handleSearch]);
+
+  const handleRetry = useCallback(() => {
+    handleSearch();
+  }, [handleSearch]);
+
   if (isLoading) {
-    return (
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h1 className="text-lg font-semibold md:text-2xl">
-            Search: {decodedQuery}
-          </h1>
-        </div>
-        <div className="flex flex-col gap-1 py-4">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <Skeleton key={i} className="h-16 w-full" />
-          ))}
-        </div>
-      </div>
-    );
+    return <SearchSkeleton searchQuery={decodedQuery} />;
   }
 
   if (error) {
     return (
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h1 className="text-lg font-semibold md:text-2xl">
-            Search: {decodedQuery}
-          </h1>
-        </div>
-        <div className="p-4 text-center text-muted-foreground">
-          <p>{error}</p>
-        </div>
-      </div>
+      <SearchError
+        searchQuery={decodedQuery}
+        error={error}
+        onRetry={handleRetry}
+      />
     );
   }
 
+  if (searchResults.length === 0) {
+    return <SearchEmpty searchQuery={decodedQuery} />;
+  }
+
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold md:text-2xl">
-          Search: {decodedQuery}
-        </h1>
-      </div>
-      {searchResults.length === 0 ? (
-        <div className="p-4 text-center text-muted-foreground">
-          <p>No tasks found for &quot;{decodedQuery}&quot;</p>
-        </div>
-      ) : (
-        <Tasks items={searchResults} />
-      )}
-    </div>
+    <SearchBody searchQuery={decodedQuery} searchResults={searchResults} />
   );
 }

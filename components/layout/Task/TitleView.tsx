@@ -2,9 +2,9 @@
 
 import { FC, useState } from "react";
 import { TaskSort } from "./TaskSort";
-import { SortBy, SortOrder } from "./Tasks";
-import { AddTaskButton } from "./AddTaskButton";
-import { CreateTaskDialog } from "./CreateTaskDialog";
+import type { SortBy, SortOrder } from "@/types";
+import { AddTaskButton } from "@/components/functional/AddTask";
+import { CreateTaskDialog } from "../../functional/AddTask/CreateTaskDialog";
 import { Id } from "@/convex/_generated/dataModel";
 
 interface TitleViewProps {

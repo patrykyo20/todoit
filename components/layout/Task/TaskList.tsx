@@ -1,13 +1,13 @@
 "use client";
 import { Tasks } from "./Tasks";
 import { CompletedTasks } from "./CompletedTasks";
-import { AddTaskWrapper } from "./AddTaskButton";
+import { AddTaskWrapper } from "@/components/functional";
 import { TaskSkeleton } from "./TaskSkeleton";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { useTaskStore } from "@/stores/taskStore";
 import { TaskSort } from "./TaskSort";
 import { useState } from "react";
-import { SortBy, SortOrder } from "./Tasks";
+import type { SortBy, SortOrder } from "@/types";
 
 export function TaskList() {
   const { tasksData, isLoading } = useTaskStore();

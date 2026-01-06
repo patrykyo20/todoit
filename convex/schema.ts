@@ -85,6 +85,7 @@ export default defineSchema({
     dueDate: v.optional(v.number()),
     startDate: v.optional(v.number()),
     endDate: v.optional(v.number()),
+    frequency: v.optional(v.string()),
     priority: v.optional(v.float64()),
     isCompleted: v.boolean(),
     embedding: v.optional(v.array(v.float64())),

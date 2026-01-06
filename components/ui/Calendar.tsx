@@ -20,7 +20,6 @@ function Calendar({
 
   return (
     <div className="space-y-4">
-      {/* Custom Header */}
       <div className="flex justify-center items-center gap-2 pt-1">
         <button
           type="button"
@@ -83,7 +82,7 @@ function Calendar({
             "bg-primary text-primary-foreground hover:bg-primary/90 focus:bg-primary/90 font-semibold",
           day_today:
             "bg-accent text-accent-foreground font-semibold border-2 border-primary",
-          day_outside: "text-muted-foreground opacity-50",
+          day_outside: "text-muted-foreground opacity-50 cursor-pointer",
           day_disabled: "text-muted-foreground opacity-30 cursor-not-allowed",
           day_hidden: "invisible",
           ...classNames,

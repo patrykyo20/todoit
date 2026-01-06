@@ -1,0 +1,46 @@
+#### **3.1 Strona główna (/loggedin)**
+```
+app/loggedin/page.tsx
+    ↓
+TaskList (components/layout/Task/TaskList.tsx)
+    ↓
+Skeleton | TaskSort | Tasks | AddTaskWrapper | Tasks | CompletedTasks
+    ↓
+Task (components/layout/Task/Task.tsx) [dla każdego taska w Tasks]
+```
+
+#### **3.2 Strona Today (/loggedin/today)**
+```
+app/loggedin/today/page.tsx
+    ↓
+SkeletonToday | TitleView | Tasks (Overdue) | Tasks (Today)
+    ↓                    ↓
+TaskSort (w TitleView)  Task (components/layout/Task/Task.tsx) [dla każdego taska]
+```
+
+#### **3.3 Strona Calendar (/loggedin/calendar)**
+```
+app/loggedin/calendar/page.tsx
+    ↓
+ViewModeToggle | ConnectionStatus | ReAuthWarning | AddEventDialog | CalendarHeader | MonthView | WeekView
+                                                                                              ↓           ↓
+                                                                                    DayHeaders | CalendarDay  DayHeaders | TimeColumn | DayColumn
+                                                                                              ↓                              ↓
+                                                                                    Task/Event items                    EventItem [dla każdego eventu]
+```
+
+#### **3.4 Strona Projects (/loggedin/projects)**
+```
+app/loggedin/projects/page.tsx
+    ↓
+Link (Next.js) → /loggedin/projects/[projectId]
+```
+
+#### **3.5 Strona Project Detail (/loggedin/projects/[projectId])**
+```
+app/loggedin/projects/[projectId]/page.tsx
+    ↓
+Tasks (components/layout/Task/Tasks.tsx)
+    ↓
+Task (components/layout/Task/Task.tsx) [dla każdego taska]
+```
