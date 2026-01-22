@@ -15,10 +15,11 @@ interface CalendarWeekDayColumnProps {
     isToday: boolean;
     dateKey: string;
   };
+  onHourClick?: (date: Date, hour: number) => void;
 }
 
 export const CalendarWeekDayColumn = memo(
-  ({ day }: CalendarWeekDayColumnProps) => {
+  ({ day, onHourClick }: CalendarWeekDayColumnProps) => {
     const { openDialog } = useEventStore();
 
     const allItems = useMemo(() => {
@@ -95,13 +96,17 @@ export const CalendarWeekDayColumn = memo(
     const handleCellClick = useCallback(
       (e: React.MouseEvent<HTMLDivElement>, hour: number) => {
         e.stopPropagation();
-        const clickedDate = new Date(day.date);
-        clickedDate.setHours(hour, 0, 0, 0);
-        const endDate = new Date(clickedDate);
-        endDate.setHours(hour + 1, 0, 0, 0);
-        openDialog(day.date, clickedDate, endDate);
+        if (onHourClick) {
+          onHourClick(day.date, hour);
+        } else {
+          const clickedDate = new Date(day.date);
+          clickedDate.setHours(hour, 0, 0, 0);
+          const endDate = new Date(clickedDate);
+          endDate.setHours(hour + 1, 0, 0, 0);
+          openDialog(day.date, clickedDate, endDate);
+        }
       },
-      [day.date, openDialog]
+      [day.date, onHourClick, openDialog]
     );
 
     return (
@@ -158,6 +163,7 @@ export const CalendarWeekDayColumn = memo(
       prevProps.day.isToday === nextProps.day.isToday &&
       prevProps.day.tasks.length === nextProps.day.tasks.length &&
       prevProps.day.events.length === nextProps.day.events.length &&
+      prevProps.onHourClick === nextProps.onHourClick &&
       prevProps.day.tasks.every(
         (task, i) =>
           task._id === nextProps.day.tasks[i]?._id &&
