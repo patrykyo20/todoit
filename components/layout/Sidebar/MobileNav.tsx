@@ -2,7 +2,7 @@
 import { Menu, Hash, PlusIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FC, useMemo } from "react";
+import { FC, useMemo, useState } from "react";
 
 import {
   Button,
@@ -14,6 +14,7 @@ import {
   Sheet,
   SheetContent,
   SheetTrigger,
+  SheetClose,
   Dialog,
   DialogTrigger,
 } from "@/components/ui";
@@ -42,6 +43,7 @@ export const MobileNav: FC<MobileNavProps> = ({
 }) => {
   const pathname = usePathname();
   const { projects: projectList } = useTaskStore();
+  const [isOpen, setIsOpen] = useState(false);
 
   const LIST_OF_TITLE_IDS: MyListTitleType = {
     primary: "",
@@ -70,7 +72,7 @@ export const MobileNav: FC<MobileNavProps> = ({
   return (
     <>
       <header className="flex h-14 items-center gap-4 border-b bg-muted/40 px-4 lg:h-[60px] lg:px-6">
-        <Sheet>
+        <Sheet open={isOpen} onOpenChange={setIsOpen}>
           <SheetTrigger asChild>
             <Button
               variant="outline"
@@ -81,7 +83,10 @@ export const MobileNav: FC<MobileNavProps> = ({
               <span className="sr-only">Toggle navigation menu</span>
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="flex flex-col">
+          <SheetContent 
+            side="left" 
+            className="flex flex-col w-[280px] sm:w-[320px]"
+          >
             <nav className="grid gap-2 text-lg font-medium">
               <UserProfile />
 
@@ -116,12 +121,13 @@ export const MobileNav: FC<MobileNavProps> = ({
                             : "text-foreground "
                         )}
                       >
-                        <Link
-                          href={link}
-                          className={cn(
-                            "flex items-center text-left gap-3 rounded-lg transition-all hover:text-primary hover:bg-muted/50 w-full cursor-pointer px-2 py-1.5 -mx-2 -my-1.5"
-                          )}
-                        >
+                        <SheetClose asChild>
+                          <Link
+                            href={link}
+                            className={cn(
+                              "flex items-center text-left gap-3 rounded-lg transition-all hover:text-primary hover:bg-muted/50 w-full cursor-pointer px-2 py-1.5 -mx-2 -my-1.5"
+                            )}
+                          >
                           <div className="flex gap-4 items-center w-full">
                             <div className="flex gap-2 items-center">
                               <p className="flex text-base text-left">
@@ -130,7 +136,8 @@ export const MobileNav: FC<MobileNavProps> = ({
                               <p>{name}</p>
                             </div>
                           </div>
-                        </Link>
+                          </Link>
+                        </SheetClose>
                         {id === "filters" && (
                           <Dialog>
                             <DialogTrigger

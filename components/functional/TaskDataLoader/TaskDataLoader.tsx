@@ -1,83 +1,69 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useMemo } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useTaskStore } from "@/stores/taskStore";
 import { memo } from "react";
 
 function TaskDataLoaderComponent() {
-  const setTasksDataRef = useRef(useTaskStore.getState().setTasksData);
-  const setProjectsRef = useRef(useTaskStore.getState().setProjects);
-  const setLoadingRef = useRef(useTaskStore.getState().setLoading);
-  const setErrorRef = useRef(useTaskStore.getState().setError);
-
-  useEffect(() => {
-    setTasksDataRef.current = useTaskStore.getState().setTasksData;
-    setProjectsRef.current = useTaskStore.getState().setProjects;
-    setLoadingRef.current = useTaskStore.getState().setLoading;
-    setErrorRef.current = useTaskStore.getState().setError;
-  }, []);
-
+  const { setTasksData, setProjects, setLoading, setError } = useTaskStore();
+  
   const tasksData = useQuery(api.tasks.getAllTasksData);
   const projects = useQuery(api.project.getProjects);
 
+  // Use refs to track previous values for comparison
   const prevTasksDataRef = useRef<typeof tasksData>(undefined);
   const prevProjectsRef = useRef<typeof projects>(undefined);
   const isInitialLoadRef = useRef(true);
 
-  // Set loading to true when queries start or return undefined
-  // Handle errors from queries
-  useEffect(() => {
-    if (tasksData === undefined || projects === undefined) {
-      setLoadingRef.current(true);
-      setErrorRef.current(false);
-    }
+  // Memoize loading state to avoid unnecessary updates
+  const isLoading = useMemo(() => {
+    return tasksData === undefined || projects === undefined;
   }, [tasksData, projects]);
 
+  // Update loading state
   useEffect(() => {
-    // Check for errors - Convex queries can throw errors
-    try {
-      if (isInitialLoadRef.current) {
-        if (tasksData && projects) {
-          isInitialLoadRef.current = false;
-          prevTasksDataRef.current = tasksData;
-          prevProjectsRef.current = projects;
-          setTasksDataRef.current(tasksData);
-          setProjectsRef.current(projects);
-          setLoadingRef.current(false);
-          setErrorRef.current(false);
-        }
-        return;
-      }
+    setLoading(isLoading);
+    if (isLoading) {
+      setError(false);
+    }
+  }, [isLoading, setLoading, setError]);
 
-      const tasksDataChanged =
-        tasksData &&
-        (!prevTasksDataRef.current ||
-          JSON.stringify(tasksData) !== JSON.stringify(prevTasksDataRef.current));
-
-      const projectsChanged =
-        projects &&
-        (!prevProjectsRef.current ||
-          JSON.stringify(projects) !== JSON.stringify(prevProjectsRef.current));
-
-      if (tasksDataChanged) {
+  // Update store only when data actually changes (Convex returns new references only on changes)
+  useEffect(() => {
+    // Initial load
+    if (isInitialLoadRef.current) {
+      if (tasksData && projects) {
+        isInitialLoadRef.current = false;
         prevTasksDataRef.current = tasksData;
-        setTasksDataRef.current(tasksData);
-        setLoadingRef.current(false);
-        setErrorRef.current(false);
-      }
-
-      if (projectsChanged) {
         prevProjectsRef.current = projects;
-        setProjectsRef.current(projects);
-        setErrorRef.current(false);
+        setTasksData(tasksData);
+        setProjects(projects);
+        setLoading(false);
+        setError(false);
       }
-    } catch {
-      setErrorRef.current(true);
-      setLoadingRef.current(false);
+      return;
     }
-  }, [tasksData, projects]);
+
+    // Use reference comparison instead of JSON.stringify
+    // Convex returns new references only when data actually changes
+    const tasksDataChanged = tasksData && tasksData !== prevTasksDataRef.current;
+    const projectsChanged = projects && projects !== prevProjectsRef.current;
+
+    if (tasksDataChanged) {
+      prevTasksDataRef.current = tasksData;
+      setTasksData(tasksData);
+      setLoading(false);
+      setError(false);
+    }
+
+    if (projectsChanged) {
+      prevProjectsRef.current = projects;
+      setProjects(projects);
+      setError(false);
+    }
+  }, [tasksData, projects, setTasksData, setProjects, setLoading, setError]);
 
   return null;
 }

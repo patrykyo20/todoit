@@ -403,3 +403,57 @@ div.ProseMirror label input[type="checkbox"]:checked:hover {
 .animate-slide-out-to-right {
   animation: slide-out-to-right 0.2s cubic-bezier(0.4, 0, 1, 1);
 }
+
+/* Sheet/Sidebar animations - optimized for performance */
+@keyframes slide-in-from-left {
+  from {
+    transform: translate3d(-100%, 0, 0);
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes slide-out-to-left {
+  from {
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+  }
+  to {
+    transform: translate3d(-100%, 0, 0);
+    opacity: 0;
+  }
+}
+
+.animate-slide-in-from-left {
+  animation: slide-in-from-left 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.animate-slide-out-to-left {
+  animation: slide-out-to-left 0.2s cubic-bezier(0.4, 0, 1, 1);
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* Sheet/Sidebar animations - for left side using class selector */
+.sheet-left[data-state="open"] {
+  animation: slide-in-from-left 0.2s cubic-bezier(0.4, 0, 0.2, 1) forwards !important;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  pointer-events: auto;
+  opacity: 1;
+}
+
+.sheet-left[data-state="closed"] {
+  animation: slide-out-to-left 0.2s cubic-bezier(0.4, 0, 1, 1) forwards !important;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  pointer-events: none;
+  opacity: 0 !important;
+}

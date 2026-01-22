@@ -38,7 +38,7 @@ export const TaskSort: FC<TaskSortProps> = ({ sortBy, sortOrder, onSortChange })
         variant="outline"
         size="icon"
         onClick={handleSortOrderToggle}
-        className="h-9 w-9"
+        className="h-9 w-9 p-0"
         aria-label={`Sort ${sortOrder === "asc" ? "descending" : "ascending"}`}
       >
         {sortOrder === "asc" ? (

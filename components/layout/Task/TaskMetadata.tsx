@@ -40,12 +40,11 @@ export const TaskMetadata: FC<TaskMetadataProps> = ({
   className,
 }) => {
   const containerClass = isMobile
-    ? "md:hidden flex items-center gap-2 sm:gap-3 mt-1 text-xs text-muted-foreground flex-wrap"
+    ? "md:hidden flex flex-end  items-center gap-2 sm:gap-3 mt-1 text-xs text-muted-foreground flex-wrap"
     : "hidden md:flex items-center gap-3 ml-auto shrink-0";
 
   return (
     <div className={clsx(containerClass, className)}>
-      {/* Hide formattedTime on mobile - less important */}
       {formattedTime && !isMobile && (
         <div className="flex items-center gap-1 text-xs text-muted-foreground shrink-0">
           <Clock className="w-3 h-3" />
@@ -62,7 +61,6 @@ export const TaskMetadata: FC<TaskMetadataProps> = ({
         </div>
       )}
 
-      {/* Hide project name on very small screens, show only icon on small screens */}
       {project && (
         <div className="flex items-center gap-1 text-xs text-muted-foreground shrink-0">
           <Hash className="w-3 h-3 shrink-0" />

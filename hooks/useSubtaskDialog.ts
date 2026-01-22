@@ -10,7 +10,7 @@ interface UseSubtaskDialogProps {
   isOpen: boolean;
 }
 
-export function useSubtaskDialog({ data, isOpen }: UseSubtaskDialogProps) {
+export function useSubtaskDialog({ data }: UseSubtaskDialogProps) {
   const {
     taskName: initialTaskName,
     description: initialDescription,

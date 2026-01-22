@@ -43,7 +43,7 @@ export const CalendarWeekEventItem = memo(
               ? `task-${(item.data as Doc<"tasks">)._id}-${dateKey}-${eventIndex}`
               : `event-${(item.data as CalendarEvent).id}-${dateKey}-${eventIndex}`
           }
-          className={`absolute top-0 left-0 right-0 p-1.5 rounded text-xs cursor-pointer hover:opacity-80 z-10 ${bgClass}`}
+          className={`absolute top-0 left-0.5 right-0.5 overflow-hidden p-1.5 rounded text-xs cursor-pointer hover:opacity-80 z-10 ${bgClass}`}
           title={
             item.type === "task"
               ? (item.data as Doc<"tasks">).taskName
@@ -74,10 +74,10 @@ export const CalendarWeekEventItem = memo(
             ? `task-${(item.data as Doc<"tasks">)._id}-${dateKey}-${eventIndex}`
             : `event-${(item.data as CalendarEvent).id}-${dateKey}-${eventIndex}`
         }
-        className={`absolute left-0 right-0 p-1.5 rounded text-xs cursor-pointer hover:opacity-80 z-10 border-l-2 ${bgClass}`}
+        className={`absolute left-0.5 right-0.5 overflow-hidden p-1.5 rounded text-xs cursor-pointer hover:opacity-80 z-10 border-l-2 ${bgClass}`}
         style={{
-          top: `${topPosition}px`,
-          height: `${height}px`,
+          top: `${topPosition + 1}px`,
+          height: `${height - 2}px`,
           minHeight: "32px",
         }}
         title={

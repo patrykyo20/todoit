@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { useMutation, useQuery, useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Doc, Id } from "@/convex/_generated/dataModel";
@@ -27,7 +27,9 @@ export function useTaskDialog({ data, isOpen }: UseTaskDialogProps) {
   const { projects } = useTaskStore();
   const { toast } = useToast();
 
-  // State
+  // Track last fetched task ID to prevent unnecessary fetches when task ID hasn't changed
+  const lastFetchedTaskIdRef = useRef<Id<"tasks"> | null>(null);
+
   const [taskName, setTaskName] = useState(initialTaskName || "");
   const [description, setDescription] = useState(initialDescription || "");
   const [projectId, setProjectId] = useState<Id<"projects"> | undefined>(
@@ -38,7 +40,6 @@ export function useTaskDialog({ data, isOpen }: UseTaskDialogProps) {
     initialDueDate ? new Date(initialDueDate) : undefined
   );
   
-  // Date range fields
   const [startDate, setStartDate] = useState<Date | undefined>(
     initialStartDate ? new Date(initialStartDate) : undefined
   );
@@ -68,10 +69,21 @@ export function useTaskDialog({ data, isOpen }: UseTaskDialogProps) {
     setDescription(value);
   }, []);
 
-  // Queries
   const isCalendarConnected =
     useQuery(api.googleCalendar.isCalendarConnected) ?? false;
 
+  // Track when dialog opens to prevent fetching when closed
+  // Update ref when dialog opens or task ID changes to trigger fetch only when needed
+  useEffect(() => {
+    if (isOpen && lastFetchedTaskIdRef.current !== _id) {
+      lastFetchedTaskIdRef.current = _id;
+    }
+  }, [isOpen, _id]);
+
+  // Fetch subtasks only when dialog is open
+  // Convex useQuery with "skip" prevents unnecessary network calls when dialog is closed
+  // Convex automatically caches results based on query parameters (parentId)
+  // So repeated calls with same parentId won't trigger new network requests
   const incompleteSubtasksQuery =
     useQuery(
       api.subTasks.incompleteSubTasks,
@@ -84,20 +96,27 @@ export function useTaskDialog({ data, isOpen }: UseTaskDialogProps) {
       isOpen ? { parentId: _id } : "skip"
     ) ?? [];
 
-  // Remove duplicates by ID to prevent React key conflicts
+  // Cache subtasks results to prevent unnecessary re-renders
+  // Only update when query results actually change or when dialog state changes
+  // Note: _id is already a dependency of the queries, so we don't need it here
   const incompleteSubtasksByProject = useMemo(() => {
+    if (!isOpen) {
+      return [];
+    }
     return Array.from(
       new Map(incompleteSubtasksQuery.map((task) => [task._id, task])).values()
     );
-  }, [incompleteSubtasksQuery]);
+  }, [incompleteSubtasksQuery, isOpen]);
 
   const completedSubtasksByProject = useMemo(() => {
+    if (!isOpen) {
+      return [];
+    }
     return Array.from(
       new Map(completedSubtasksQuery.map((task) => [task._id, task])).values()
     );
-  }, [completedSubtasksQuery]);
+  }, [completedSubtasksQuery, isOpen]);
 
-  // Mutations
   const checkSubTaskMutation = useMutation(api.subTasks.checkSubTask);
   const uncheckSubTaskMutation = useMutation(api.subTasks.uncheckSubTask);
   const deleteATaskMutation = useMutation(api.tasks.deleteTask);
@@ -105,7 +124,6 @@ export function useTaskDialog({ data, isOpen }: UseTaskDialogProps) {
   const createCalendarEvent = useAction(api.googleCalendar.createCalendarEvent);
   const updateCalendarEvent = useAction(api.googleCalendar.updateCalendarEvent);
 
-  // Helper function to combine date and time into timestamp
   const combineDateAndTime = useCallback((date: Date | undefined, time: string): number | undefined => {
     if (!date || !time) return undefined;
     const [hours, minutes] = time.split(":").map(Number);

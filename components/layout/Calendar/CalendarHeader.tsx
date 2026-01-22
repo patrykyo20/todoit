@@ -21,16 +21,18 @@ interface NavButtonProps {
   disabled?: boolean;
 }
 
-const NavButton = memo(({ onClick, ariaLabel, icon, disabled }: NavButtonProps) => (
-  <button
-    onClick={onClick}
-    className="p-2 rounded-lg hover:bg-muted transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-    aria-label={ariaLabel}
-    disabled={disabled}
-  >
-    {icon}
-  </button>
-));
+const NavButton = memo(
+  ({ onClick, ariaLabel, icon, disabled }: NavButtonProps) => (
+    <button
+      onClick={onClick}
+      className="p-2 rounded-lg hover:bg-muted transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+      aria-label={ariaLabel}
+      disabled={disabled}
+    >
+      {icon}
+    </button>
+  )
+);
 NavButton.displayName = "NavButton";
 
 interface TitleSectionProps {
@@ -40,7 +42,7 @@ interface TitleSectionProps {
 
 const TitleSection = memo(({ title, isLoadingEvents }: TitleSectionProps) => (
   <div className="flex items-center gap-2">
-    <h2 className="text-xl font-semibold">{title}</h2>
+    <h2 className="text-md lg:text-xl font-semibold">{title}</h2>
     {isLoadingEvents && (
       <RefreshCw className="w-4 h-4 animate-spin text-muted-foreground" />
     )}
@@ -72,13 +74,13 @@ export const CalendarHeader = memo(
     showCreateButton = true,
   }: CalendarHeaderProps) => {
     return (
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-5 items-end lg:flex-row lg:items-center justify-between">
         {showCreateButton && (
           <div className="flex items-center gap-2">
             <CreateEventButton onCreateEvent={onCreateEvent} />
           </div>
         )}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center w-full lg:w-auto gap-2 justify-center lg:justify-start">
           <NavButton
             onClick={onPrevious}
             ariaLabel="Previous"
@@ -91,10 +93,7 @@ export const CalendarHeader = memo(
               ariaLabel="Refresh calendar events"
               icon={
                 <RefreshCw
-                  className={cn(
-                    "w-4 h-4",
-                    isLoadingEvents && "animate-spin"
-                  )}
+                  className={cn("w-4 h-4", isLoadingEvents && "animate-spin")}
                 />
               }
               disabled={isLoadingEvents}
